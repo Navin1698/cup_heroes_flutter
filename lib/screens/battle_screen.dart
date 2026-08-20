@@ -50,7 +50,6 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
     _ticker = createTicker((elapsed) {
       if (_lastElapsed != Duration.zero) {
         final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0;
-        // Clamp frame time to prevent lag spikes
         final clampedDt = dt.clamp(0.001, 0.05);
         _controller.update(clampedDt);
       }
@@ -82,7 +81,7 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
     return ChangeNotifierProvider.value(
       value: _controller,
       child: Scaffold(
-        backgroundColor: GameConstants.darkBg,
+        backgroundColor: const Color(0xFF131127),
         body: SafeArea(
           child: Consumer<GameController>(
             builder: (context, controller, child) {
@@ -93,10 +92,10 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
                       // Top Battle HUD
                       _buildTopHud(controller),
 
-                      // EXP Progress Bar
+                      // EXP Level Progress Bar
                       _buildExpBar(controller),
 
-                      // Main Game Viewport (Canvas + Touch Drag)
+                      // Main Game Viewport
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -186,71 +185,93 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
   }
 
   Widget _buildTopHud(GameController controller) {
+    final waveProgress = controller.currentWave / controller.chapter.totalWaves;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       color: const Color(0xFF1B1833),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Pause Button
           IconButton(
-            icon: const Icon(Icons.pause_circle_filled, color: Colors.white70, size: 30),
+            icon: const Icon(Icons.pause_circle_filled, color: Colors.white70, size: 28),
             onPressed: () => controller.togglePause(),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
 
-          // Wave Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C274E),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF4B4480)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.waves, color: Colors.amberAccent, size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  'WAVE ${controller.currentWave}/${controller.chapter.totalWaves}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Gold Earned & Speed Toggle
-          Row(
-            children: [
-              Row(
+          // Central Wave Progress Bar
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 14),
+              child: Column(
                 children: [
-                  const Icon(Icons.monetization_on, color: GameConstants.goldColor, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${controller.goldEarned}',
-                    style: const TextStyle(color: GameConstants.goldColor, fontWeight: FontWeight.bold, fontSize: 13),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'WAVE ${controller.currentWave}',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            '/${controller.chapter.totalWaves}',
+                            style: const TextStyle(color: Colors.white60, fontSize: 11),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.shield, color: Colors.redAccent, size: 14),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: waveProgress.clamp(0.0, 1.0),
+                      backgroundColor: const Color(0xFF100E22),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5B36D6)),
+                      minHeight: 6,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(width: 12),
+            ),
+          ),
+
+          // Gold Count & Speed Toggle
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: GameTheme.currencyPill(),
+                child: Row(
+                  children: [
+                    const Icon(Icons.monetization_on, color: Color(0xFFFFD700), size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${controller.goldEarned}',
+                      style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () => controller.toggleSpeed(),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: controller.gameSpeed == 2.0 ? GameConstants.primaryPurple : const Color(0xFF2C274E),
+                    color: controller.gameSpeed == 2.0 ? const Color(0xFF5B36D6) : const Color(0xFF2C274E),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: controller.gameSpeed == 2.0 ? Colors.white70 : const Color(0xFF453F7A)),
                   ),
                   child: Text(
                     '${controller.gameSpeed.toInt()}X',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                   ),
                 ),
               ),
@@ -266,12 +287,19 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
     return Container(
       height: 18,
       color: const Color(0xFF131127),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         children: [
-          Text(
-            'LV.${controller.currentRunLevel}',
-            style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: const Color(0xFF5B36D6),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'LV.${controller.currentRunLevel}',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 9),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -280,7 +308,7 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
               child: LinearProgressIndicator(
                 value: expPct,
                 backgroundColor: const Color(0xFF221F40),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2ECC71)),
                 minHeight: 6,
               ),
             ),
@@ -294,64 +322,65 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
     final isReady = controller.isSuperReady;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: const BoxDecoration(
         color: Color(0xFF1B1833),
         border: Border(top: BorderSide(color: Color(0xFF2C274E), width: 1.5)),
       ),
       child: Row(
         children: [
-          // Drag instruction
+          // Drag Tip
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'DRAG CUP TO CATCH BALLS',
-                  style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+                  'DRAG CUP TO CATCH ORBS',
+                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.8),
                 ),
                 Text(
-                  'Catching energy balls fuels your Hero Super Skill!',
-                  style: TextStyle(color: Colors.white38, fontSize: 10),
+                  'Multiply falling balls to power up your Cup Hero!',
+                  style: TextStyle(color: Colors.white54, fontSize: 10),
                 ),
               ],
             ),
           ),
 
-          // Super Skill Button
+          // Super Skill 3D Button
           InkWell(
             onTap: isReady ? () => controller.triggerSuperAbility() : null,
             borderRadius: BorderRadius.circular(16),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              decoration: BoxDecoration(
-                color: isReady ? Colors.amber : const Color(0xFF2C274E),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  if (isReady)
-                    BoxShadow(
-                      color: Colors.amber.withOpacity(0.6),
-                      blurRadius: 16,
-                      spreadRadius: 2,
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: isReady
+                  ? GameTheme.button3D(
+                      color: const Color(0xFFFF9F1A),
+                      shadowColor: const Color(0xFFC0392B),
+                      borderColor: const Color(0xFFFFD32A),
+                      borderRadius: 16,
+                      elevation: 4,
+                    )
+                  : BoxDecoration(
+                      color: const Color(0xFF2C274E),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF3F3B6C)),
                     ),
-                ],
-              ),
               child: Row(
                 children: [
                   Icon(
                     Icons.bolt,
-                    color: isReady ? Colors.black : Colors.white38,
+                    color: isReady ? Colors.white : Colors.white38,
                     size: 20,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   Text(
                     isReady ? 'SUPER SKILL!' : '${controller.cup.superCharge.toInt()}%',
                     style: TextStyle(
-                      color: isReady ? Colors.black : Colors.white54,
+                      color: isReady ? Colors.white : Colors.white54,
                       fontWeight: FontWeight.w900,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -365,35 +394,35 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
 
   Widget _buildPauseModal(GameController controller) {
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: Colors.black.withValues(alpha: 0.75),
       child: Center(
         child: Container(
           width: 300,
-          padding: const EdgeInsets.all(24),
-          decoration: GameTheme.cardDecoration(
+          padding: const EdgeInsets.all(22),
+          decoration: GameTheme.card3D(
             color: const Color(0xFF1E1B38),
-            borderColor: GameConstants.primaryPurple,
-            borderWidth: 2,
+            borderColor: const Color(0xFF5B36D6),
             borderRadius: 20,
+            elevation: 6,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
                 'GAME PAUSED',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.0),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => controller.togglePause(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: GameConstants.primaryPurple,
+                  backgroundColor: const Color(0xFF2ECC71),
                   minimumSize: const Size(double.infinity, 44),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text('RESUME', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(

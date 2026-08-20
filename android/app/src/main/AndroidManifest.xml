@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="cup_heroes_flutter"
+        android:label="Cup Heroes"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

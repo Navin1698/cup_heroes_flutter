@@ -13,9 +13,9 @@ void main() {
     await tester.pumpWidget(const CupHeroesApp());
     await tester.pump();
 
-    // Verify Title and Hub Elements
-    expect(find.text('CUP HEROES'), findsOneWidget);
-    expect(find.text('PLAY BATTLE'), findsOneWidget);
+    // Verify Hub Elements
+    expect(find.text('LV. 1'), findsOneWidget);
+    expect(find.text('BATTLE'), findsOneWidget);
     expect(find.text('Gear Forge'), findsOneWidget);
   });
 

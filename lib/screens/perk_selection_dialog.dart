@@ -20,82 +20,87 @@ class PerkSelectionDialog extends StatelessWidget {
       canPop: false,
       child: Center(
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(20),
-          decoration: GameTheme.cardDecoration(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(18),
+          decoration: GameTheme.card3D(
             color: const Color(0xFF1E1B38),
-            borderColor: GameConstants.primaryPurple,
-            borderWidth: 3.0,
-            borderRadius: 24.0,
+            borderColor: const Color(0xFF5B36D6),
+            borderRadius: 24,
+            elevation: 8,
             glow: true,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Title Banner
+              // Header Title Banner
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 28),
+                  const Icon(Icons.star, color: Color(0xFFFFD700), size: 26),
                   const SizedBox(width: 8),
-                  Text(
-                    'LEVEL UP!',
+                  const Text(
+                    'CHOOSE A PERK!',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                       letterSpacing: 1.5,
                       shadows: [
-                        Shadow(color: GameConstants.primaryPurple.withOpacity(0.8), blurRadius: 10),
+                        Shadow(color: Color(0xFF5B36D6), blurRadius: 12),
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.star, color: Colors.amber, size: 28),
+                  const Icon(Icons.star, color: Color(0xFFFFD700), size: 26),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               const Text(
-                'Choose a Perk to power up your hero',
-                style: TextStyle(color: Colors.white60, fontSize: 13),
+                'Power up your Cup Hero for this battle!',
+                style: TextStyle(color: Colors.white60, fontSize: 12),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              // 3 Perk Cards
+              // 3 Vertical Perk Cards Row / Column
               ...options.asMap().entries.map((entry) {
                 final index = entry.key;
                 final perk = entry.value;
                 final rarityColor = GameTheme.getRarityColor(perk.tier);
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
+                  padding: const EdgeInsets.only(bottom: 10.0),
                   child: InkWell(
                     onTap: () => onSelect(perk),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: GameTheme.cardDecoration(
+                      padding: const EdgeInsets.all(12),
+                      decoration: GameTheme.card3D(
                         color: const Color(0xFF28234D),
                         borderColor: rarityColor,
-                        borderWidth: 2.0,
                         borderRadius: 16,
+                        elevation: 3,
                       ),
                       child: Row(
                         children: [
-                          // Icon Container
+                          // 3D Icon Box
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 52,
+                            height: 52,
                             decoration: BoxDecoration(
-                              color: perk.accentColor.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: perk.accentColor, width: 1.5),
+                              gradient: RadialGradient(
+                                colors: [
+                                  perk.accentColor.withValues(alpha: 0.3),
+                                  const Color(0xFF141226),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: perk.accentColor, width: 2),
                             ),
-                            child: Icon(perk.icon, color: perk.accentColor, size: 26),
+                            child: Icon(perk.icon, color: perk.accentColor, size: 28),
                           ),
                           const SizedBox(width: 14),
 
-                          // Details
+                          // Text Info
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,15 +112,15 @@ class PerkSelectionDialog extends StatelessWidget {
                                         perk.title,
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 14,
                                         ),
                                       ),
                                     ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: rarityColor.withOpacity(0.2),
+                                        color: rarityColor.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(color: rarityColor, width: 1),
                                       ),
@@ -123,20 +128,20 @@ class PerkSelectionDialog extends StatelessWidget {
                                         GameTheme.getRarityName(perk.tier).toUpperCase(),
                                         style: TextStyle(
                                           color: rarityColor,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w900,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 3),
                                 Text(
                                   perk.description,
                                   style: const TextStyle(
                                     color: Colors.white70,
-                                    fontSize: 12,
-                                    height: 1.3,
+                                    fontSize: 11,
+                                    height: 1.25,
                                   ),
                                 ),
                               ],
@@ -146,7 +151,7 @@ class PerkSelectionDialog extends StatelessWidget {
                       ),
                     ),
                   ),
-                ).animate().fadeIn(delay: (index * 120).ms).slideY(begin: 0.2, end: 0);
+                ).animate().fadeIn(delay: (index * 100).ms).slideY(begin: 0.2, end: 0);
               }),
             ],
           ),

@@ -6,6 +6,7 @@ import 'state/player_profile_state.dart';
 import 'state/hero_state.dart';
 import 'state/inventory_state.dart';
 import 'state/talent_state.dart';
+import 'state/quest_state.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
@@ -41,6 +42,7 @@ class CupHeroesApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HeroState()),
         ChangeNotifierProvider(create: (_) => InventoryState()),
         ChangeNotifierProvider(create: (_) => TalentState()),
+        ChangeNotifierProvider(create: (_) => QuestState()),
       ],
       child: MaterialApp(
         title: 'Cup Heroes',

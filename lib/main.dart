@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'core/theme/game_theme.dart';
-import 'state/player_profile_state.dart';
-import 'state/hero_state.dart';
-import 'state/inventory_state.dart';
-import 'state/talent_state.dart';
-import 'state/quest_state.dart';
-import 'screens/home_screen.dart';
+import 'core/theme/ember_theme.dart';
+import 'features/home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,33 +17,24 @@ void main() async {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF131127),
+      systemNavigationBarColor: Color(0xFF0C1024),
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
 
-  runApp(const CupHeroesApp());
+  runApp(const EmberboundApp());
 }
 
-class CupHeroesApp extends StatelessWidget {
-  const CupHeroesApp({super.key});
+class EmberboundApp extends StatelessWidget {
+  const EmberboundApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => PlayerProfileState()),
-        ChangeNotifierProvider(create: (_) => HeroState()),
-        ChangeNotifierProvider(create: (_) => InventoryState()),
-        ChangeNotifierProvider(create: (_) => TalentState()),
-        ChangeNotifierProvider(create: (_) => QuestState()),
-      ],
-      child: MaterialApp(
-        title: 'Cup Heroes',
-        debugShowCheckedModeBanner: false,
-        theme: GameTheme.theme,
-        home: const HomeScreen(),
-      ),
+    return MaterialApp(
+      title: 'EMBERBOUND',
+      debugShowCheckedModeBanner: false,
+      theme: EmberTheme.theme,
+      home: const HomeScreen(),
     );
   }
 }

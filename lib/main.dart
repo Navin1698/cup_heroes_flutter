@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/theme/ember_theme.dart';
+import 'core/audio/audio_service.dart';
 import 'features/home/home_screen.dart';
 
 void main() async {
@@ -21,6 +22,9 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+
+  // Initialize in-memory audio synthesizer
+  AudioService.instance.init();
 
   runApp(const EmberboundApp());
 }

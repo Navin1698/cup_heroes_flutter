@@ -67,11 +67,21 @@ class GameController extends ChangeNotifier {
   final Map<PerkId, int> activePerks = {};
   List<SkillPerkModel> currentPerkDraftOptions = [];
 
+  // Screen Shake & Visual Juice
+  double screenShakeAmount = 0.0;
+  Offset screenShakeOffset = Offset.zero;
+  double heroEnergyStreamTimer = 0.0;
+  Offset lastCupCatchPos = Offset.zero;
+
   // Super Ability State
   bool get isSuperReady => cup.superCharge >= cup.maxSuperCharge;
 
   // RNG
   final Random _rng = Random();
+
+  void triggerScreenShake(double amount) {
+    screenShakeAmount = amount;
+  }
 
   GameController({
     required this.chapter,
@@ -218,6 +228,21 @@ class GameController extends ChangeNotifier {
       _updatePhysics(subDelta);
     }
 
+    // Process Screen Shake
+    if (screenShakeAmount > 0) {
+      screenShakeOffset = Offset(
+        (_rng.nextDouble() - 0.5) * screenShakeAmount,
+        (_rng.nextDouble() - 0.5) * screenShakeAmount,
+      );
+      screenShakeAmount = max(0.0, screenShakeAmount - delta * 15.0);
+    } else {
+      screenShakeOffset = Offset.zero;
+    }
+
+    if (heroEnergyStreamTimer > 0) {
+      heroEnergyStreamTimer = max(0.0, heroEnergyStreamTimer - delta);
+    }
+
     _updateCombat(delta);
     _updateWave(delta);
     particles.update(delta);
@@ -289,8 +314,9 @@ class GameController extends ChangeNotifier {
       for (final gate in gates) {
         if (!ball.passedGateIds.contains(gate.id) && gate.bounds.contains(ball.position)) {
           ball.passedGateIds.add(gate.id);
+          gate.triggerHit();
           gate.moveSpeed += 2.0; // slight impulse
-          AudioManager.instance.playGateHit();
+          AudioManager.instance.playGateHit(isMultiply: gate.type == GateType.multiply);
           particles.spawnBurst(gate.position, gate.type == GateType.multiply ? GameConstants.gateMultiplyColor : GameConstants.gateAddColor, count: 8);
 
           // Calculate spawned clones
@@ -322,6 +348,11 @@ class GameController extends ChangeNotifier {
         totalBallsCaught++;
         AudioManager.instance.playBallCaught();
         particles.spawnBallCatchStars(ball.position);
+
+        // Surge Hero Attack Speed from Caught Balls!
+        hero.attackTimer += 0.35;
+        heroEnergyStreamTimer = 0.22;
+        lastCupCatchPos = ball.position;
 
         // Fill Super Charge
         final chargeBonus = activePerks.containsKey(PerkId.superMeterFast) ? 1.5 : 1.0;

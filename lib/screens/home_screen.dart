@@ -26,7 +26,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentTabIndex = 2; // Default to Center Battle Tab
+  int _currentTabIndex = 1; // Default to Center Battle Hub
 
   @override
   void initState() {
@@ -47,10 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentTabIndex,
         children: [
           const ShopScreen(),
-          const EquipmentScreen(),
           _buildMainBattleHub(context),
-          const TalentsScreen(),
-          const HeroesScreen(),
+          const EquipmentScreen(),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -602,11 +600,9 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
         unselectedLabelStyle: const TextStyle(fontSize: 10),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.storefront_outlined), activeIcon: Icon(Icons.storefront), label: 'Shop'),
-          BottomNavigationBarItem(icon: Icon(Icons.shield_outlined), activeIcon: Icon(Icons.shield), label: 'Gear'),
-          BottomNavigationBarItem(icon: Icon(Icons.play_circle_fill, size: 30), label: 'Battle'),
-          BottomNavigationBarItem(icon: Icon(Icons.auto_awesome_outlined), activeIcon: Icon(Icons.auto_awesome), label: 'Talents'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Heroes'),
+          BottomNavigationBarItem(icon: Icon(Icons.storefront_outlined, size: 26), activeIcon: Icon(Icons.storefront, size: 28), label: 'Shop'),
+          BottomNavigationBarItem(icon: Icon(Icons.play_circle_fill, size: 38), label: 'Battle'),
+          BottomNavigationBarItem(icon: Icon(Icons.shield_outlined, size: 26), activeIcon: Icon(Icons.shield, size: 28), label: 'Gear'),
         ],
       ),
     );

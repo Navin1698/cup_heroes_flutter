@@ -20,6 +20,11 @@ class GameCanvasPainter extends CustomPainter {
     canvas.save();
     canvas.scale(scaleX, scaleY);
 
+    // Apply Dynamic Screen Shake
+    if (controller.screenShakeOffset != Offset.zero) {
+      canvas.translate(controller.screenShakeOffset.dx, controller.screenShakeOffset.dy);
+    }
+
     // 1. Draw Arenas Background
     _drawBackgrounds(canvas);
 
@@ -32,10 +37,15 @@ class GameCanvasPainter extends CustomPainter {
     // 4. Draw Bottom Pachinko Board & Cup
     _drawPachinkoBoard(canvas);
 
-    // 5. Draw Particles
+    // 5. Draw Energy Stream Connection (Cup -> Hero)
+    if (controller.heroEnergyStreamTimer > 0) {
+      _drawEnergyStream(canvas);
+    }
+
+    // 6. Draw Particles
     _drawParticles(canvas);
 
-    // 6. Draw Floating Combat Texts
+    // 7. Draw Floating Combat Texts
     _drawFloatingTexts(canvas);
 
     canvas.restore();
@@ -472,17 +482,18 @@ class GameCanvasPainter extends CustomPainter {
 
   void _drawShinyPeg(Canvas canvas, Peg peg) {
     final pos = peg.position;
+    final r = peg.radius;
 
     // Flash on hit
     if (peg.hitFlashTimer > 0) {
       final glowPaint = Paint()
         ..color = Colors.white.withValues(alpha: 0.8)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-      canvas.drawCircle(pos, peg.radius * 2.0, glowPaint);
+      canvas.drawOval(Rect.fromCenter(center: pos, width: r * 2.0 * peg.scaleX, height: r * 2.0 * peg.scaleY), glowPaint);
     }
 
     // Peg Shadow
-    canvas.drawCircle(pos + const Offset(0, 2.5), peg.radius, Paint()..color = Colors.black.withValues(alpha: 0.4));
+    canvas.drawOval(Rect.fromCenter(center: pos + const Offset(0, 2.5), width: r * 2.0 * peg.scaleX, height: r * 1.6 * peg.scaleY), Paint()..color = Colors.black.withValues(alpha: 0.4));
 
     // Metallic Rim
     final pegGrad = Paint()
@@ -490,13 +501,13 @@ class GameCanvasPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [Color(0xFFE0E0E0), Color(0xFF757575)],
-      ).createShader(Rect.fromCircle(center: pos, radius: peg.radius));
-    canvas.drawCircle(pos, peg.radius, pegGrad);
+      ).createShader(Rect.fromCircle(center: pos, radius: r));
+    canvas.drawOval(Rect.fromCenter(center: pos, width: r * 2.0 * peg.scaleX, height: r * 2.0 * peg.scaleY), pegGrad);
 
     // Inner Rubber Cap (Purple Arcade Style)
-    canvas.drawCircle(pos, peg.radius * 0.65, Paint()..color = const Color(0xFF6C3CE9));
+    canvas.drawOval(Rect.fromCenter(center: pos, width: r * 1.3 * peg.scaleX, height: r * 1.3 * peg.scaleY), Paint()..color = const Color(0xFF6C3CE9));
     // Specular Highlight
-    canvas.drawCircle(pos + const Offset(-1.8, -1.8), peg.radius * 0.25, Paint()..color = Colors.white);
+    canvas.drawCircle(pos + const Offset(-1.8, -1.8), r * 0.25, Paint()..color = Colors.white);
   }
 
   void _draw3DMultiplierGate(Canvas canvas, MultiplierGate gate) {
@@ -505,10 +516,11 @@ class GameCanvasPainter extends CustomPainter {
     final topColor = isMultiply ? const Color(0xFFFFD32A) : const Color(0xFF2BED7E);
     final shadowColor = isMultiply ? const Color(0xFFC0392B) : const Color(0xFF1E8449);
 
-    final rrect = RRect.fromRectAndRadius(gate.bounds, const Radius.circular(12));
+    final bounds = gate.bounds;
+    final rrect = RRect.fromRectAndRadius(bounds, const Radius.circular(12));
 
     // 3D Drop Shadow
-    final shadowBounds = Rect.fromCenter(center: gate.position + const Offset(0, 4), width: gate.width, height: gate.height);
+    final shadowBounds = Rect.fromCenter(center: gate.position + const Offset(0, 4), width: bounds.width, height: bounds.height);
     canvas.drawRRect(RRect.fromRectAndRadius(shadowBounds, const Radius.circular(12)), Paint()..color = shadowColor);
 
     // Gate Gradient Body
@@ -517,7 +529,7 @@ class GameCanvasPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [topColor, baseColor],
-      ).createShader(gate.bounds);
+      ).createShader(bounds);
     canvas.drawRRect(rrect, gradPaint);
 
     // Shiny Border
@@ -559,7 +571,7 @@ class GameCanvasPainter extends CustomPainter {
 
     // 3D Bottom Shadow
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cup.x, cup.y + 5), width: cup.width, height: cup.height), const Radius.circular(14)),
+      RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cup.x, cup.y + 5), width: cupRect.width, height: cupRect.height), const Radius.circular(14)),
       Paint()..color = const Color(0xFF0F0E20),
     );
 
@@ -575,7 +587,7 @@ class GameCanvasPainter extends CustomPainter {
     canvas.drawRRect(RRect.fromRectAndRadius(cupRect, const Radius.circular(14)), cupGrad);
 
     // Cup Rim (Golden Catch Zone at the Top)
-    final rimRect = Rect.fromLTWH(cupRect.left - 2, cupRect.top - 2, cup.width + 4, 8);
+    final rimRect = Rect.fromLTWH(cupRect.left - 2, cupRect.top - 2, cupRect.width + 4, 8);
     final rimPaint = Paint()
       ..shader = const LinearGradient(
         colors: [Color(0xFFFFD700), Color(0xFFFFA500), Color(0xFFFFD700)],
@@ -588,13 +600,30 @@ class GameCanvasPainter extends CustomPainter {
       final fillRect = Rect.fromLTWH(
         cupRect.left + 6,
         cupRect.bottom - 7,
-        (cup.width - 12) * fillPct,
+        (cupRect.width - 12) * fillPct,
         4,
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(fillRect, const Radius.circular(2)),
         Paint()..color = isSuper ? Colors.white : const Color(0xFF2ECC71),
       );
+    }
+
+    // Floating Catch Counter Pop (+1, +3, +10)
+    if (cup.burstTimer > 0 && cup.ballsCaughtInBurst > 0) {
+      final burstSpan = TextSpan(
+        text: '+${cup.ballsCaughtInBurst}',
+        style: const TextStyle(
+          color: Color(0xFFFFD700),
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+          shadows: [
+            Shadow(color: Colors.black, blurRadius: 4),
+          ],
+        ),
+      );
+      final btp = TextPainter(text: burstSpan, textDirection: TextDirection.ltr)..layout();
+      btp.paint(canvas, Offset(cup.x - btp.width / 2, cupRect.top - 22));
     }
 
     // Cup Label (CUP or ⚡ SUPER)
@@ -636,6 +665,31 @@ class GameCanvasPainter extends CustomPainter {
         ..style = PaintingStyle.fill;
       canvas.drawCircle(p.position, p.currentSize, paint);
     }
+  }
+
+  void _drawEnergyStream(Canvas canvas) {
+    final heroPos = controller.hero.position;
+    final cupPos = controller.lastCupCatchPos != Offset.zero
+        ? controller.lastCupCatchPos
+        : Offset(controller.cup.x, controller.cup.y);
+
+    final streamPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.amber.withValues(alpha: 0.8),
+          Colors.cyanAccent.withValues(alpha: 0.6),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromPoints(cupPos, heroPos))
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()
+      ..moveTo(cupPos.dx, cupPos.dy)
+      ..quadraticBezierTo((cupPos.dx + heroPos.dx) / 2 - 30, (cupPos.dy + heroPos.dy) / 2, heroPos.dx, heroPos.dy);
+
+    canvas.drawPath(path, streamPaint);
   }
 
   void _drawFloatingTexts(Canvas canvas) {

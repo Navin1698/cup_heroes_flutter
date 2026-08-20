@@ -20,6 +20,9 @@ class MultiplierGate {
   final double minX;
   final double maxX;
 
+  // Animation pulse
+  double scaleFactor = 1.0;
+
   MultiplierGate({
     required this.id,
     required this.position,
@@ -36,11 +39,19 @@ class MultiplierGate {
 
   Rect get bounds => Rect.fromCenter(
         center: position,
-        width: width,
-        height: height,
+        width: width * scaleFactor,
+        height: height * scaleFactor,
       );
 
+  void triggerHit() {
+    scaleFactor = 1.25;
+  }
+
   void update(double dt) {
+    if (scaleFactor > 1.0) {
+      scaleFactor = max(1.0, scaleFactor - dt * 2.0);
+    }
+
     if (!isMoving) return;
     double newX = position.dx + moveDirection * moveSpeed * dt;
     if (newX <= minX + width / 2) {
@@ -57,7 +68,9 @@ class MultiplierGate {
 class Peg {
   final Offset position;
   final double radius;
-  double hitFlashTimer = 0.0; // Glow timer when hit
+  double hitFlashTimer = 0.0;
+  double scaleX = 1.0;
+  double scaleY = 1.0;
 
   Peg({
     required this.position,
@@ -65,13 +78,18 @@ class Peg {
   });
 
   void triggerHit() {
-    hitFlashTimer = 0.2;
+    hitFlashTimer = 0.15;
+    scaleX = 1.35;
+    scaleY = 0.75; // Squash
   }
 
   void update(double dt) {
     if (hitFlashTimer > 0) {
       hitFlashTimer = max(0.0, hitFlashTimer - dt);
     }
+    // Elastic spring back to 1.0
+    scaleX += (1.0 - scaleX) * min(1.0, dt * 15.0);
+    scaleY += (1.0 - scaleY) * min(1.0, dt * 15.0);
   }
 }
 
@@ -96,7 +114,7 @@ class GameBall {
   void updatePhysics(double dt, double bounceMultiplier) {
     // Apply gravity
     velocity = Offset(
-      velocity.dx * 0.998, // slight air drag
+      velocity.dx * 0.998,
       (velocity.dy + GameConstants.gravity * dt).clamp(-GameConstants.maxBallVelocity, GameConstants.maxBallVelocity),
     );
 
@@ -113,6 +131,12 @@ class CupCatcher {
   final double maxSuperCharge = 100.0;
   double catchGlowTimer = 0.0;
 
+  // Juicy Squash & Stretch
+  double scaleX = 1.0;
+  double scaleY = 1.0;
+  int ballsCaughtInBurst = 0;
+  double burstTimer = 0.0;
+
   CupCatcher({
     required this.x,
     required this.y,
@@ -122,25 +146,39 @@ class CupCatcher {
 
   Rect get bounds => Rect.fromCenter(
         center: Offset(x, y),
-        width: width,
-        height: height,
+        width: width * scaleX,
+        height: height * scaleY,
       );
 
   Rect get catchArea => Rect.fromLTWH(
         x - width * 0.45,
-        y - height * 0.5,
+        y - height * 0.55,
         width * 0.9,
-        height * 0.6,
+        height * 0.65,
       );
 
   void triggerCatch(double chargeAmount) {
     superCharge = (superCharge + chargeAmount).clamp(0.0, maxSuperCharge);
-    catchGlowTimer = 0.15;
+    catchGlowTimer = 0.18;
+    scaleX = 1.18; // Stretch width on catch
+    scaleY = 0.82; // Squash height
+    ballsCaughtInBurst++;
+    burstTimer = 0.5;
   }
 
   void update(double dt) {
     if (catchGlowTimer > 0) {
       catchGlowTimer = max(0.0, catchGlowTimer - dt);
+    }
+    // Smooth spring back to normal size
+    scaleX += (1.0 - scaleX) * min(1.0, dt * 14.0);
+    scaleY += (1.0 - scaleY) * min(1.0, dt * 14.0);
+
+    if (burstTimer > 0) {
+      burstTimer -= dt;
+      if (burstTimer <= 0) {
+        ballsCaughtInBurst = 0;
+      }
     }
   }
 

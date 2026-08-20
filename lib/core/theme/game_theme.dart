@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/game_constants.dart';
 
 class GameTheme {
@@ -13,7 +12,7 @@ class GameTheme {
         secondary: GameConstants.goldColor,
         surface: GameConstants.arenaBg,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+      fontFamily: 'Roboto',
     );
   }
 

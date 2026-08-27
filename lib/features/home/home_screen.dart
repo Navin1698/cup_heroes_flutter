@@ -6,6 +6,8 @@ import '../../models/hero_definition.dart';
 import '../../models/world_definition.dart';
 import '../../repositories/save_repository.dart';
 import '../battle/battle_screen.dart';
+import '../battle/dual_battle_screen.dart';
+import '../battle/ball_drop_sandbox_screen.dart';
 import '../heroes/hero_screen.dart';
 import '../inventory/inventory_screen.dart';
 import '../shop/shop_screen.dart';
@@ -313,50 +315,137 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBigAdventureButton(BuildContext context, StageDefinition stage) {
-    return InkWell(
-      onTap: () {
-        if (_energy >= GameConstants.stageEnergyCost) {
-          setState(() => _energy -= GameConstants.stageEnergyCost);
-          SaveRepository.instance.saveCurrencies(gold: _gold, gems: _gems, energy: _energy);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BattleScreen(hero: _selectedHero, stage: stage),
+    return Column(
+      children: [
+        // 1. PRIMARY: Cup Heroes Dual-Screen Battle (Plinko + Wave Combat)
+        InkWell(
+          onTap: () {
+            if (_energy >= GameConstants.stageEnergyCost) {
+              setState(() => _energy -= GameConstants.stageEnergyCost);
+              SaveRepository.instance.saveCurrencies(gold: _gold, gems: _gems, energy: _energy);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DualBattleScreen(hero: _selectedHero, stage: stage),
+                ),
+              ).then((_) => _loadSaveData());
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Not enough Energy! (Requires 5 Energy)')),
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: double.infinity,
+            height: 62,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF9900), Color(0xFFFF2A85), Color(0xFF7928CA)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF2A85).withValues(alpha: 0.5),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ).then((_) => _loadSaveData());
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Not enough Energy! (Requires 5 Energy)')),
-          );
-        }
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        height: 60,
-        decoration: EmberTheme.primaryButton(borderRadius: 20),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.sports_esports, color: Colors.white, size: 32),
+                SizedBox(width: 10),
+                Text(
+                  'CUP HEROES BATTLE',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  '(⚡ 5)',
+                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // 2. Secondary Modes: Action RPG & Plinko Sandbox
+        Row(
           children: [
-            Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
-            SizedBox(width: 8),
-            Text(
-              'ENTER ADVENTURE',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 18,
-                letterSpacing: 1.5,
+            // Action RPG Mode
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BattleScreen(hero: _selectedHero, stage: stage),
+                    ),
+                  ).then((_) => _loadSaveData());
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: EmberColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: EmberColors.primary.withValues(alpha: 0.6)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.gamepad, color: EmberColors.secondary, size: 16),
+                      SizedBox(width: 6),
+                      Text('Action RPG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                    ],
+                  ),
+                ),
               ),
             ),
-            SizedBox(width: 8),
-            Text(
-              '(⚡ 5)',
-              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14),
+            const SizedBox(width: 10),
+
+            // Plinko Sandbox Mode
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BallDropSandboxScreen(),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: EmberColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.6)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bubble_chart, color: Color(0xFF00E5FF), size: 16),
+                      SizedBox(width: 6),
+                      Text('Plinko Sandbox', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 

@@ -31,6 +31,12 @@ class SkillDefinition {
   final bool hasFrostChill;
   final bool hasExplosiveHit;
 
+  // Plinko / Board Modifiers per level
+  final double gateWidthBonusPct;
+  final int gateValueBonus;
+  final double goldenBallChance;
+  final bool hasPlinkoBarrage;
+
   const SkillDefinition({
     required this.id,
     required this.name,
@@ -51,10 +57,50 @@ class SkillDefinition {
     this.hasFireBurn = false,
     this.hasFrostChill = false,
     this.hasExplosiveHit = false,
+    this.gateWidthBonusPct = 0.0,
+    this.gateValueBonus = 0,
+    this.goldenBallChance = 0.0,
+    this.hasPlinkoBarrage = false,
   });
 
   static List<SkillDefinition> getAllSkills() {
     return const [
+      SkillDefinition(
+        id: 'gate_expansion',
+        name: 'Gate Expansion',
+        description: 'Increases the width of all Multiplier Gates by +35%.',
+        tier: SkillTier.rare,
+        icon: Icons.open_in_full,
+        accentColor: EmberColors.secondary,
+        gateWidthBonusPct: 0.35,
+      ),
+      SkillDefinition(
+        id: 'super_multiplier',
+        name: 'Super Multiplier',
+        description: 'All Multiplier gates give +1 extra value bonus.',
+        tier: SkillTier.epic,
+        icon: Icons.add_circle,
+        accentColor: EmberColors.accent,
+        gateValueBonus: 1,
+      ),
+      SkillDefinition(
+        id: 'golden_comet',
+        name: 'Golden Comet Balls',
+        description: '30% chance for dropped balls to be Golden (2.5x Hero Damage).',
+        tier: SkillTier.rare,
+        icon: Icons.stars,
+        accentColor: EmberColors.accent,
+        goldenBallChance: 0.30,
+      ),
+      SkillDefinition(
+        id: 'plinko_barrage',
+        name: 'Plinko Barrage',
+        description: 'Every 5 balls collected automatically drops a free bonus ball.',
+        tier: SkillTier.epic,
+        icon: Icons.bubble_chart,
+        accentColor: EmberColors.success,
+        hasPlinkoBarrage: true,
+      ),
       SkillDefinition(
         id: 'crystal_power',
         name: 'Crystal Power',
